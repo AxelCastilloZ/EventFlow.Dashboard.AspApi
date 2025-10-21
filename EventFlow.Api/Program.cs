@@ -2,22 +2,24 @@ using EventFlow.Api.Hubs;
 using EventFlow.Data;
 using EventFlow.Services;
 using Microsoft.EntityFrameworkCore;
+using EventFlow.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 // Configurar Entity Framework con SQL Server
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Registrar DashboardService
+// Registrar servicios
 builder.Services.AddScoped<DashboardService>();
+
+//  Registrar el Consumer de RabbitMQ (del proyecto EventFlow.Services)
+//builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // Configurar SignalR
 builder.Services.AddSignalR();
 
-// Configurar CORS para permitir conexiones desde el frontend
+// Configurar CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -34,28 +36,19 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Servir archivos estáticos (DEBE IR ANTES DE HTTPS REDIRECTION)
 app.UseDefaultFiles();
 app.UseStaticFiles();
-
-// Comentar temporalmente UseHttpsRedirection
-// app.UseHttpsRedirection();
-
-// Usar CORS
 app.UseCors("AllowAll");
-
 app.UseAuthorization();
-
 app.MapControllers();
 
-// Mapear el Hub de SignalR
+// Mapear el Hub de SignalR con la interfaz
 app.MapHub<DashboardHub>("/dashboardHub");
 
 app.Run();
