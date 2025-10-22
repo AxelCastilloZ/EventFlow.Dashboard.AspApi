@@ -13,7 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Registrar servicios
 builder.Services.AddScoped<DashboardService>();
 
-//  Registrar el Consumer de RabbitMQ (del proyecto EventFlow.Services)
+//  Registrar el Consumer de RabbitMQ
 //builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // Configurar SignalR

@@ -31,7 +31,7 @@ public class RabbitMQConsumerService : BackgroundService
     {
         try
         {
-            _logger.LogInformation("🚀 Iniciando RabbitMQ Consumer Service...");
+            _logger.LogInformation(" Iniciando RabbitMQ Consumer Service...");
 
             var rabbitConfig = _configuration.GetSection("RabbitMQ");
             var hostName = rabbitConfig["HostName"] ?? "localhost";
@@ -39,7 +39,7 @@ public class RabbitMQConsumerService : BackgroundService
             var password = rabbitConfig["Password"] ?? "guest";
             var queueName = rabbitConfig["QueueName"] ?? "pagos.dashboard";
 
-            _logger.LogInformation("📡 Configuración RabbitMQ:");
+            _logger.LogInformation(" Configuración RabbitMQ:");
             _logger.LogInformation("   Host: {Host}", hostName);
             _logger.LogInformation("   User: {User}", userName);
             _logger.LogInformation("   Queue: {Queue}", queueName);
@@ -65,7 +65,7 @@ public class RabbitMQConsumerService : BackgroundService
                 cancellationToken: stoppingToken
             );
 
-            _logger.LogInformation("✅ Conectado a RabbitMQ");
+            _logger.LogInformation(" Conectado a RabbitMQ");
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -74,7 +74,7 @@ public class RabbitMQConsumerService : BackgroundService
                 var body = ea.Body.ToArray();
                 var mensaje = Encoding.UTF8.GetString(body);
 
-                _logger.LogInformation("📨 Evento recibido: {Mensaje}", mensaje);
+                _logger.LogInformation(" Evento recibido: {Mensaje}", mensaje);
 
                 try
                 {
@@ -87,16 +87,16 @@ public class RabbitMQConsumerService : BackgroundService
 
                     if (evento == null)
                     {
-                        _logger.LogWarning("⚠️ No se pudo deserializar el evento");
+                        _logger.LogWarning(" No se pudo deserializar el evento");
                         return;
                     }
 
-                    _logger.LogInformation("✅ Evento parseado - ID: {IdCompra}, Estado: {Estado}",
+                    _logger.LogInformation(" Evento parseado - ID: {IdCompra}, Estado: {Estado}",
                         evento.IdCompra, evento.Estado);
 
                     if (evento.Estado?.ToLower() != "exitoso")
                     {
-                        _logger.LogWarning("⚠️ Pago no exitoso, se ignora");
+                        _logger.LogWarning(" Pago no exitoso, se ignora");
                         return;
                     }
 
@@ -107,7 +107,7 @@ public class RabbitMQConsumerService : BackgroundService
 
                     var dashboardData = await dashboardService.GetDashboardDataAsync();
 
-                    _logger.LogInformation("📊 Stats - Compras: {Total}, Valor: ${Valor}",
+                    _logger.LogInformation(" Stats - Compras: {Total}, Valor: ${Valor}",
                         dashboardData.TotalCompras, dashboardData.ValorTotalTransaccionado);
 
                     var hubContext = scope.ServiceProvider
@@ -116,7 +116,7 @@ public class RabbitMQConsumerService : BackgroundService
                     await hubContext.Clients.All
                         .SendAsync("ReceiveDashboardUpdate", dashboardData, stoppingToken);
 
-                    _logger.LogInformation("✅ Dashboard actualizado vía SignalR");
+                    _logger.LogInformation(" Dashboard actualizado vía SignalR");
                 }
                 catch (Exception ex)
                 {
@@ -133,20 +133,20 @@ public class RabbitMQConsumerService : BackgroundService
                 cancellationToken: stoppingToken
             );
 
-            _logger.LogInformation("🎧 Escuchando en queue '{Queue}'", queueName);
+            _logger.LogInformation(" Escuchando en queue '{Queue}'", queueName);
 
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "❌ Error fatal en Consumer");
+            _logger.LogError(ex, " Error fatal en Consumer");
             throw;
         }
     }
 
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("🛑 Deteniendo Consumer...");
+        _logger.LogInformation(" Deteniendo Consumer...");
 
         if (_channel != null)
         {

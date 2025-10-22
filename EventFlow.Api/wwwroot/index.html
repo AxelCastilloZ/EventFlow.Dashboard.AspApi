@@ -112,6 +112,16 @@
             margin-top: 20px;
             font-size: 14px;
         }
+
+        .info-box {
+            background: #0f3460;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -156,71 +166,101 @@
         <div class="timestamp">
             Última actualización: <span id="ultimaActualizacion">--</span>
         </div>
+
+        <div class="info-box">
+            Conectado a: <span id="apiUrl">--</span>
+        </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
+        // ✅ Usar rutas relativas (se adapta a cualquier entorno)
+        const API_BASE = window.location.origin;
+        document.getElementById('apiUrl').textContent = API_BASE;
+
         const connection = new signalR.HubConnectionBuilder()
-            .withUrl('http://localhost:5218/dashboardHub')
+            .withUrl('/dashboardHub')  // ← ✅ CAMBIO 1: Ruta relativa
             .withAutomaticReconnect()
+            .configureLogging(signalR.LogLevel.Information)  // ← ✅ AGREGADO: Logging
             .build();
 
         connection.on('ReceiveDashboardUpdate', (data) => {
-            console.log('Datos recibidos:', data);
+            console.log('📊 Datos recibidos:', data);
             actualizarDashboard(data);
+        });
+
+        connection.onreconnecting(() => {
+            console.log('🔄 Reconectando...');
+            document.getElementById('status').className = 'status disconnected';
+            document.getElementById('statusText').textContent = 'Reconectando... 🔄';
+        });
+
+        connection.onreconnected(() => {
+            console.log('✅ Reconectado');
+            document.getElementById('status').className = 'status connected';
+            document.getElementById('statusText').textContent = 'Conectado ✅';
         });
 
         connection.start()
             .then(() => {
-                console.log('Conectado a SignalR Hub');
+                console.log('✅ Conectado a SignalR Hub');
                 document.getElementById('status').className = 'status connected';
                 document.getElementById('statusText').textContent = 'Conectado ✅';
                 cargarDatosIniciales();
             })
             .catch(err => {
-                console.error('Error de conexión:', err);
+                console.error('❌ Error de conexión:', err);
+                document.getElementById('status').className = 'status disconnected';
                 document.getElementById('statusText').textContent = 'Error de conexión ❌';
             });
 
         async function cargarDatosIniciales() {
             try {
-                const response = await fetch('http://localhost:5218/api/test/dashboard-data');
+                const response = await fetch('/api/test/dashboard-data');  // ← ✅ CAMBIO 2
+                if (!response.ok) throw new Error('Error al cargar datos');
                 const data = await response.json();
                 actualizarDashboard(data);
             } catch (error) {
-                console.error('Error al cargar datos iniciales:', error);
+                console.error('❌ Error al cargar datos iniciales:', error);
             }
         }
 
         async function simularEvento() {
             try {
-                const response = await fetch('http://localhost:5218/api/test/simular-evento-pago', {
+                const response = await fetch('/api/test/simular-evento-pago', {  // ← ✅ CAMBIO 3
                     method: 'POST'
                 });
+                if (!response.ok) throw new Error('Error al simular evento');
                 const result = await response.json();
-                console.log('Evento simulado:', result);
+                console.log('✅ Evento simulado:', result);
             } catch (error) {
-                console.error('Error al simular evento:', error);
-                alert('Error al simular evento. Verifica que el API esté corriendo.');
+                console.error('❌ Error al simular evento:', error);
+                alert('Error al simular evento. Verifica que la API esté corriendo.');
             }
         }
 
         function actualizarDashboard(data) {
             document.getElementById('totalCompras').textContent = data.totalCompras;
-            document.getElementById('valorTotal').textContent = '$' + data.valorTotalTransaccionado.toFixed(2);
-            document.getElementById('saldoPromedio').textContent = '$' + data.saldoPromedioTarjetas.toFixed(2);
+            document.getElementById('valorTotal').textContent = '$' + data.valorTotalTransaccionado.toLocaleString('es-ES', { minimumFractionDigits: 2 });
+            document.getElementById('saldoPromedio').textContent = '$' + data.saldoPromedioTarjetas.toLocaleString('es-ES', { minimumFractionDigits: 2 });
 
             const productosVendidos = data.productosMasVendidos.map(p =>
-                `<div class="list-item"><span>${p.nombreProducto}</span><span>${p.cantidadVendida} vendidos</span></div>`
+                `<div class="list-item">
+                        <span>${p.nombreProducto}</span>
+                        <span>${p.cantidadVendida} vendidos ($${p.montoTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })})</span>
+                    </div>`
             ).join('');
             document.getElementById('productosMasVendidos').innerHTML = productosVendidos || '<p>No hay datos</p>';
 
             const productosStock = data.productosStockBajo.map(p =>
-                `<div class="list-item"><span>${p.nombreProducto}</span><span>Stock: ${p.stockActual}</span></div>`
+                `<div class="list-item">
+                        <span>${p.nombreProducto}</span>
+                        <span style="color: ${p.stockActual <= 5 ? '#ff004c' : '#ffa500'}">Stock: ${p.stockActual}</span>
+                    </div>`
             ).join('');
             document.getElementById('productosStockBajo').innerHTML = productosStock || '<p>No hay productos con stock bajo</p>';
 
-            document.getElementById('ultimaActualizacion').textContent = new Date(data.ultimaActualizacion).toLocaleString();
+            document.getElementById('ultimaActualizacion').textContent = new Date(data.ultimaActualizacion).toLocaleString('es-ES');
         }
     </script>
 </body>
