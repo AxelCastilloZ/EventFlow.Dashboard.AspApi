@@ -9,68 +9,90 @@ public class AppDbContext : DbContext
     {
     }
 
-    // DbSets - Tablas de la base de datos
-    public DbSet<Producto> Productos { get; set; }
-    public DbSet<Usuario> Usuarios { get; set; }
-    public DbSet<Tarjeta> Tarjetas { get; set; }
-    public DbSet<Compra> Compras { get; set; }
+    // DbSets - Matching Grupo3 database tables
+    public DbSet<User> Users { get; set; }
+    public DbSet<Card> Cards { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Purchase> Purchases { get; set; }
+    public DbSet<PurchaseDetail> PurchaseDetails { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // Configuración de Producto
-        modelBuilder.Entity<Producto>(entity =>
+        // Configure User entity
+        modelBuilder.Entity<User>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Precio).HasColumnType("decimal(18,2)");
+            entity.ToTable("Users");
+            entity.HasKey(e => e.User_Id);
+            entity.Property(e => e.Username).IsRequired();
+            entity.Property(e => e.First_Name).IsRequired();
+            entity.Property(e => e.Last_Name).IsRequired();
+            entity.Property(e => e.Email).IsRequired();
+            entity.Property(e => e.Password).IsRequired();
         });
 
-        // Configuración de Usuario
-        modelBuilder.Entity<Usuario>(entity =>
+        // Configure Card entity
+        modelBuilder.Entity<Card>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Nombre).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Email).IsRequired().HasMaxLength(200);
+            entity.ToTable("Cards");
+            entity.HasKey(e => e.Card_Id);
+            entity.Property(e => e.Card_Type).IsRequired();
+            entity.Property(e => e.Card_Number).IsRequired();
+            entity.Property(e => e.Money).IsRequired();
+            entity.Property(e => e.Expiration_Date).IsRequired();
         });
 
-        // Configuración de Tarjeta
-        modelBuilder.Entity<Tarjeta>(entity =>
+        // Configure Product entity
+        modelBuilder.Entity<Product>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.NumeroTarjeta).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.SaldoDisponible).HasColumnType("decimal(18,2)");
+            entity.ToTable("Products");
+            entity.HasKey(e => e.Product_Id);
+            entity.Property(e => e.Product_Name).IsRequired();
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.Price).IsRequired();
+        });
 
-            // Relación: Una tarjeta pertenece a un usuario
-            entity.HasOne(e => e.Usuario)
-                  .WithMany(u => u.Tarjetas)
-                  .HasForeignKey(e => e.UsuarioId)
+        // Configure Purchase entity
+        modelBuilder.Entity<Purchase>(entity =>
+        {
+            entity.ToTable("Purchases");
+            entity.HasKey(e => e.Purchase_Id);
+            entity.Property(e => e.SubTotal).IsRequired();
+            entity.Property(e => e.Purchase_Date).IsRequired();
+
+            // Relationship: Purchase belongs to a Card
+            entity.HasOne(e => e.Card)
+                  .WithMany(c => c.Purchases)
+                  .HasForeignKey(e => e.Card_Id)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // Relationship: Purchase has many PurchaseDetails
+            entity.HasMany(e => e.PurchaseDetails)
+                  .WithOne(pd => pd.Purchase)
+                  .HasForeignKey(pd => pd.Purchase_Id)
                   .OnDelete(DeleteBehavior.Cascade);
         });
 
-        // Configuración de Compra
-        modelBuilder.Entity<Compra>(entity =>
+        // Configure PurchaseDetail entity
+        modelBuilder.Entity<PurchaseDetail>(entity =>
         {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.MontoTotal).HasColumnType("decimal(18,2)");
+            entity.ToTable("PurchaseDetails");
+            entity.HasKey(e => e.Purchase_Detail_Id);
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.Total).IsRequired();
+            entity.Property(e => e.Purchase_Date).IsRequired();
 
-            // Relación: Una compra pertenece a un usuario
-            entity.HasOne(e => e.Usuario)
-                  .WithMany(u => u.Compras)
-                  .HasForeignKey(e => e.UsuarioId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            // Relationship: PurchaseDetail belongs to a Purchase
+            entity.HasOne(e => e.Purchase)
+                  .WithMany(p => p.PurchaseDetails)
+                  .HasForeignKey(e => e.Purchase_Id)
+                  .OnDelete(DeleteBehavior.Cascade);
 
-            // Relación: Una compra pertenece a un producto
-            entity.HasOne(e => e.Producto)
-                  .WithMany(p => p.Compras)
-                  .HasForeignKey(e => e.ProductoId)
-                  .OnDelete(DeleteBehavior.Restrict);
-
-            // Relación: Una compra se paga con una tarjeta
-            entity.HasOne(e => e.Tarjeta)
-                  .WithMany(t => t.Compras)
-                  .HasForeignKey(e => e.TarjetaId)
+            // Relationship: PurchaseDetail belongs to a Product
+            entity.HasOne(e => e.Product)
+                  .WithMany(p => p.PurchaseDetails)
+                  .HasForeignKey(e => e.Product_Id)
                   .OnDelete(DeleteBehavior.Restrict);
         });
     }

@@ -1,13 +1,12 @@
 ﻿namespace EventFlow.Data.Entities;
 
-public class Producto
+public class Product
 {
-    public int Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
-    public decimal Precio { get; set; }
-    public int Stock { get; set; }
-    public string? Categoria { get; set; }
-    public DateTime FechaCreacion { get; set; } = DateTime.UtcNow;
+    public int Product_Id { get; set; }
+    public string Product_Name { get; set; } = string.Empty;
+    public int Quantity { get; set; }
+    public int Price { get; set; }
     
-    public ICollection<Compra> Compras { get; set; } = new List<Compra>();
+    // Navigation properties
+    public ICollection<PurchaseDetail> PurchaseDetails { get; set; } = new List<PurchaseDetail>();
 }

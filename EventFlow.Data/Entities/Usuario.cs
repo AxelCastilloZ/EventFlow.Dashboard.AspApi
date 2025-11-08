@@ -1,12 +1,14 @@
 ﻿namespace EventFlow.Data.Entities;
 
-public class Usuario
+public class User
 {
-    public int Id { get; set; }
-    public string Nombre { get; set; } = string.Empty;
+    public int User_Id { get; set; }
+    public string Username { get; set; } = string.Empty;
+    public string First_Name { get; set; } = string.Empty;
+    public string Last_Name { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
-    public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+    public string Password { get; set; } = string.Empty;
     
-    public ICollection<Tarjeta> Tarjetas { get; set; } = new List<Tarjeta>();
-    public ICollection<Compra> Compras { get; set; } = new List<Compra>();
+    // Navigation properties
+    public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
 }

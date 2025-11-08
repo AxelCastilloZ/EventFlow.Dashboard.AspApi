@@ -1,15 +1,14 @@
 ﻿namespace EventFlow.Data.Entities;
 
-public class Tarjeta
+public class Card
 {
-    public int Id { get; set; }
-    public string NumeroTarjeta { get; set; } = string.Empty;
-    public decimal SaldoDisponible { get; set; }
-    public DateTime FechaExpiracion { get; set; }
-    public bool EstaActiva { get; set; } = true;
+    public int Card_Id { get; set; }
+    public int User_Id { get; set; }
+    public string Card_Type { get; set; } = string.Empty;
+    public string Card_Number { get; set; } = string.Empty;
+    public int Money { get; set; }
+    public DateTime Expiration_Date { get; set; }
     
-    public int UsuarioId { get; set; }
-    public Usuario Usuario { get; set; } = null!;
-    
-    public ICollection<Compra> Compras { get; set; } = new List<Compra>();
+    // Navigation properties
+    public ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
 }

@@ -6,15 +6,18 @@ using EventFlow.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar Entity Framework con SQL Server
+//MySQL
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
+    ));
 
 // Registrar servicios
 builder.Services.AddScoped<DashboardService>();
 
-//  Registrar el Consumer de RabbitMQ
-//builder.Services.AddHostedService<RabbitMQConsumerService>();
+// Registrar el Consumer de RabbitMQ (opcional)
+// builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // Configurar SignalR
 builder.Services.AddSignalR();
@@ -48,7 +51,7 @@ app.UseCors("AllowAll");
 app.UseAuthorization();
 app.MapControllers();
 
-// Mapear el Hub de SignalR con la interfaz
+// Mapear el Hub de SignalR
 app.MapHub<DashboardHub>("/dashboardHub");
 
 app.Run();
