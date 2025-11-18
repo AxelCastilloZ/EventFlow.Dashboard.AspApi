@@ -16,20 +16,30 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Registrar servicios
 builder.Services.AddScoped<DashboardService>();
 
-// Registrar el Consumer de RabbitMQ (opcional)
-// builder.Services.AddHostedService<RabbitMQConsumerService>();
+// Registrar el Consumer de RabbitMQ
+builder.Services.AddHostedService<RabbitMQConsumerService>();
 
 // Configurar SignalR
 builder.Services.AddSignalR();
 
-// Configurar CORS
+//  CONFIGURAR CORS CON IPs ESPECÍFICAS DEL GRUPO 7
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("AllowGrupo7", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins(
+    
+    "http://26.20.226.32:5173",
+
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+
+    // Para tu HTML de prueba
+    "http://localhost:5218"
+)
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials();  
     });
 });
 
@@ -47,7 +57,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
-app.UseCors("AllowAll");
+
+
+app.UseCors("AllowGrupo7");
+
 app.UseAuthorization();
 app.MapControllers();
 

@@ -60,7 +60,7 @@ public class DashboardService
     {
         // Products use Quantity field instead of Stock
         return await _context.Products
-            .Where(p => p.Quantity <= 10)
+            .Where(p => p.Quantity <= 35)
             .OrderBy(p => p.Quantity)
             .Select(p => new ProductoStockDto
             {
